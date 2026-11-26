@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500" role="img" aria-label="Nexus N1 connected dashcam hero render">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="35%" r="75%">
+      <stop offset="0%" stop-color="#16294a"/>
+      <stop offset="100%" stop-color="#0B1F3A"/>
+    </radialGradient>
+    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#334d75"/>
+      <stop offset="55%" stop-color="#1b2d49"/>
+      <stop offset="100%" stop-color="#0d1a2e"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8fb4e8" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#8fb4e8" stop-opacity="0.2"/>
+    </linearGradient>
+    <linearGradient id="lens" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#5b7fae"/>
+      <stop offset="35%" stop-color="#1d2f4a"/>
+      <stop offset="70%" stop-color="#050b15"/>
+      <stop offset="100%" stop-color="#0a1424"/>
+    </linearGradient>
+    <radialGradient id="glass" cx="32%" cy="30%" r="65%">
+      <stop offset="0%" stop-color="#a8c6f0" stop-opacity="0.85"/>
+      <stop offset="60%" stop-color="#2c4a73" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#0a1424" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="ledglow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff5a5a" stop-opacity="1"/>
+      <stop offset="40%" stop-color="#E03A3A" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#E03A3A" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="softglow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="5"/>
+    </filter>
+  </defs>
+
+  <rect width="800" height="500" fill="url(#bg)"/>
+
+  <!-- horizon light streak -->
+  <ellipse cx="400" cy="330" rx="330" ry="30" fill="#1d3a63" opacity="0.35"/>
+
+  <!-- device group -->
+  <g transform="translate(400 240)">
+    <!-- ground shadow -->
+    <ellipse cx="0" cy="120" rx="230" ry="14" fill="#000" opacity="0.45" filter="url(#softglow)"/>
+
+    <!-- back shell shadow -->
+    <rect x="-172" y="-52" width="344" height="96" rx="22" fill="#050b15" opacity="0.7"/>
+
+    <!-- main body -->
+    <rect x="-180" y="-75" width="360" height="96" rx="22" fill="url(#body)" stroke="#3f5d84" stroke-width="1.2"/>
+
+    <!-- top rim highlight -->
+    <path d="M -158 -75 Q -180 -75 -180 -53 L -180 -45 L 180 -45 L 180 -53 Q 180 -75 158 -75 Z" fill="url(#edge)" opacity="0.35"/>
+
+    <!-- subtle body seam -->
+    <line x1="-170" y1="-27" x2="170" y2="-27" stroke="#0a1424" stroke-width="0.8" opacity="0.8"/>
+
+    <!-- lens barrel -->
+    <g transform="translate(-104 8)">
+      <circle r="46" fill="#050b15"/>
+      <circle r="44" fill="url(#body)" stroke="#3f5d84" stroke-width="1"/>
+      <circle r="37" fill="#0f1e35"/>
+      <circle r="31" fill="url(#lens)"/>
+      <circle r="31" fill="url(#glass)"/>
+      <circle r="11" fill="#000"/>
+      <circle cx="-7" cy="-7" r="3.5" fill="#ffffff" opacity="0.75"/>
+      <circle cx="8" cy="6" r="2" fill="#a8c6f0" opacity="0.35"/>
+    </g>
+
+    <!-- recording LED -->
+    <circle cx="122" cy="-30" r="14" fill="url(#ledglow)" filter="url(#softglow)" opacity="0.9"/>
+    <circle cx="122" cy="-30" r="4.5" fill="#ff6a6a"/>
+    <circle cx="122" cy="-30" r="4.5" fill="#E03A3A"/>
+
+    <!-- vent slots -->
+    <g fill="#050b15" opacity="0.9">
+      <rect x="18" y="-56" width="2.4" height="11" rx="1.2"/>
+      <rect x="26" y="-56" width="2.4" height="11" rx="1.2"/>
+      <rect x="34" y="-56" width="2.4" height="11" rx="1.2"/>
+      <rect x="42" y="-56" width="2.4" height="11" rx="1.2"/>
+      <rect x="50" y="-56" width="2.4" height="11" rx="1.2"/>
+      <rect x="58" y="-56" width="2.4" height="11" rx="1.2"/>
+    </g>
+
+    <!-- N glyph -->
+    <g transform="translate(126 30)" opacity="0.6">
+      <path d="M -7 -7 L -7 7 M -7 -7 L 7 7 M 7 -7 L 7 7" stroke="#8fb4e8" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+
+  <!-- wordmark -->
+  <text x="400" y="430" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#cfe0f5" letter-spacing="7">NEXUS · N1</text>
+  <text x="400" y="454" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="10" fill="#6d8bb0" letter-spacing="3">18.0 cm · CONNECTED DASHCAM</text>
+</svg>
