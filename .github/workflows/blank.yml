@@ -1,0 +1,162 @@
+# -----------------------------------------------------------------------------
+# Nexus N1 — Repo integrity gate
+#
+# Fast (< 60 s) PR check that runs on every branch. Complements:
+#   • firmware-ci.yml  → ESP-IDF build (heavy, path-filtered to firmware/**)
+#   • kicad-check.yml  → ERC/DRC (heavy, path-filtered to hardware/kicad/**)
+#   • docs-lint.yml    → external link rot + weekly schedule
+#
+# This gate only fails on things that must never merge: broken YAML,
+# broken local links, malformed SVG, missing required files.
+# -----------------------------------------------------------------------------
+
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: ['**']
+  workflow_dispatch:
+
+# Least privilege. Nothing here writes to the repo.
+permissions:
+  contents: read
+
+# Cancel in-flight runs on the same ref — saves minutes on rapid pushes.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Global timeout protects against runaway jobs (e.g. a hung npm install).
+env:
+  PYTHON_VERSION: '3.12'
+  NODE_VERSION: '20'
+
+# -----------------------------------------------------------------------------
+jobs:
+
+  # ── 1. Validate every YAML file in the tree ────────────────────────────────
+  lint-yaml:
+    name: YAML syntax
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install yamllint
+        run: pip install 'yamllint==1.35.1'
+
+      - name: Lint .yml / .yaml
+        run: |
+          yamllint -d "{extends: default, rules: {line-length: {max: 200}, document-start: disable, truthy: {allowed-values: ['true','false','on','off']}}}" \
+            .github/ docs/ hardware/ firmware/ 2>/dev/null || \
+          find . -path ./node_modules -prune -o \( -name '*.yml' -o -name '*.yaml' \) -print \
+            | xargs -r yamllint -d "{extends: default, rules: {line-length: {max: 200}, document-start: disable}}"
+
+  # ── 2. Check markdown links resolve (local files only — fast) ──────────────
+  lint-markdown:
+    name: Markdown links (offline)
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: lychee (offline mode — local targets only)
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --offline
+            --verbose
+            --no-progress
+            --accept 200,206
+            --exclude-path node_modules
+            --exclude-path firmware/build
+            './**/*.md'
+          fail: true
+
+  # ── 3. SVG must be well-formed XML (GitHub renders them; bad XML = broken UI)
+  validate-svg:
+    name: SVG well-formedness
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install libxml2-utils
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq libxml2-utils
+
+      - name: Parse every SVG
+        run: |
+          set -euo pipefail
+          shopt -s globstar nullglob
+          fail=0
+          for f in assets/**/*.svg docs/**/*.svg; do
+            if xmllint --noout "$f" 2>/tmp/xmllint.err; then
+              echo "✓ $f"
+            else
+              echo "✗ $f"; cat /tmp/xmllint.err; fail=1
+            fi
+          done
+          exit $fail
+
+  # ── 4. Required files exist — a cheap structural guard ─────────────────────
+  structure-check:
+    name: Repository structure
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Required files present
+        run: |
+          set -euo pipefail
+          required=(
+            README.md
+            LICENSE
+            firmware/README.md
+            docs/README.md
+            docs/legal/privacy-policy.md
+            docs/legal/terms-of-service.md
+            docs/architecture/tradeoffs.md
+            assets/nexus-n1-hero.svg
+            assets/envelope-18cm.svg
+          )
+          missing=0
+          for f in "${required[@]}"; do
+            if [[ -f "$f" ]]; then echo "✓ $f"; else echo "✗ MISSING: $f"; missing=1; fi
+          done
+          exit $missing
+
+  # ── 5. Aggregated gate — branch protection points at THIS job ──────────────
+  ci-gate:
+    name: CI gate
+    if: always()
+    needs: [lint-yaml, lint-markdown, validate-svg, structure-check]
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Fail if any upstream job failed or was cancelled
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: |
+          echo "One or more CI jobs failed:"
+          echo '${{ toJSON(needs) }}'
+          exit 1
+
+      - name: Write summary
+        run: |
+          {
+            echo "## CI gate passed"
+            echo ""
+            echo "| Job | Result |"
+            echo "|---|---|"
+            echo "| lint-yaml | ${{ needs.lint-yaml.result }} |"
+            echo "| lint-markdown | ${{ needs.lint-markdown.result }} |"
+            echo "| validate-svg | ${{ needs.validate-svg.result }} |"
+            echo "| structure-check | ${{ needs.structure-check.result }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
